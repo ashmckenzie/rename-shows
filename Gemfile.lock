@@ -1,0 +1,33 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    awesome_print (0.4.0)
+    coderay (0.9.8)
+    httparty (0.8.0)
+      multi_json
+      multi_xml
+    method_source (0.6.0)
+      ruby_parser (>= 2.0.5)
+    multi_json (1.0.3)
+    multi_xml (0.4.0)
+    pry (0.9.3)
+      coderay (>= 0.9.8)
+      method_source (>= 0.6.0)
+      ruby_parser (>= 2.0.5)
+      slop (~> 1.9.0)
+    ruby_parser (2.2.0)
+      sexp_processor (~> 3.0)
+    sexp_processor (3.0.6)
+    slop (1.9.1)
+    trollop (1.16.2)
+    tvdb_party (0.6.0)
+      httparty (>= 0.6.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  awesome_print
+  pry
+  trollop
+  tvdb_party
