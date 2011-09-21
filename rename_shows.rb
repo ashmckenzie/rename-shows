@@ -13,8 +13,13 @@ require 'pry'
 
 require_relative 'lib/episode'
 
-$config = YAML.load_file('config.yaml')
 $log = Logger.new(STDOUT)
+
+$log.formatter = proc { |severity, datetime, progname, msg|
+  "#{datetime}: #{msg}\n"
+}
+
+$config = YAML.load_file('config.yaml')
 
 $tvdb = TvdbParty::Search.new($config['api_key'])
 
@@ -33,7 +38,7 @@ $debug = opts[:debug]
 $forreal = opts[:forreal]
 
 unless ARGV[0] && File.directory?(ARGV[0])
-  $log.error 'ERROR: Please specify a directory'
+  $log.error 'Please specify a directory'
   exit
 end
 
