@@ -6,6 +6,7 @@ GEM
     httparty (0.8.0)
       multi_json
       multi_xml
+    log4r (1.1.9)
     method_source (0.6.0)
       ruby_parser (>= 2.0.5)
     multi_json (1.0.3)
@@ -28,6 +29,7 @@ PLATFORMS
 
 DEPENDENCIES
   awesome_print
+  log4r
   pry
   trollop
   tvdb_party

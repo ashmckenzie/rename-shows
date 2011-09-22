@@ -6,18 +6,21 @@ Bundler.require(:default)
 
 require 'pathname'
 require 'fileutils'
-require 'logger'
 require 'trollop'
 require 'yaml'
 require 'pry'
+require 'log4r/outputter/datefileoutputter'
 
 require_relative 'lib/episode'
 
-$log = Logger.new(STDOUT)
+include Log4r
 
-$log.formatter = proc { |severity, datetime, progname, msg|
-  "#{datetime}: #{msg}\n"
-}
+$log = Log4r::Logger.new ''
+
+$log.outputters = [
+  Log4r::StdoutOutputter.new('', :formatter => Log4r::PatternFormatter.new(:pattern => "%d %5l: %m")),
+  Log4r::FileOutputter.new('', :filename => "log/#{Time.now.strftime('%Y%m%d%H%M%S')}.log")
+]
 
 $config = YAML.load_file('config.yaml')
 

@@ -3,18 +3,18 @@ class Episode
   
   def initialize path
     @file = Pathname.new(path)
-    match = @file.basename.to_s.match(/s(\d\d)e(\d\d).*\.(\w+)$/i)
-    @show = @file.dirname.to_s.split('/')[-2]
-    @season = match[1]
-    @episode = match[2]
-    @extension = match[3].downcase
-    lookup
   end
     
   def rename!
-    if @file != suggested_file
-      $log.info "Renaming '#{@file} to '#{suggested_file}" if $verbose
-      FileUtils.mv @file, suggested_file if $forreal
+    if lookup
+      if @file != suggested_file
+        $log.info "Renaming '#{@file.basename} to '#{suggested_file.basename}" if $verbose
+        FileUtils.mv @file, suggested_file if $forreal
+      else
+        $log.info "Has correct filename '#{@file}'" if $verbose
+      end
+    else
+      $log.error "Something weird with '#{@file}'"
     end
   end
   
@@ -22,30 +22,49 @@ class Episode
 
   def lookup
     $log.debug "Looking up '#{@file}'" if $debug
-    show_cache_file = "#{show}/show.marshal"
-    unless ($shows[show] ||= read_cache(show_cache_file))
-      $shows[show] = $tvdb.search(show).first
-      cache show_cache_file, $shows[show]
-    else
-      $log.debug "Cache hit for show '#{show}'" if $debug
+
+    return false unless (match = @file.basename.to_s.match(/s(\d\d)e(\d\d)\.?.*\.(\w+)$/i))
+
+    begin
+
+      @show = @file.dirname.to_s.split('/')[-2]
+      @season = match[1]
+      @episode = match[2]
+      @extension = match[3].downcase
+
+      show_cache_file = "#{show}/show.marshal"
+      unless ($shows[show] ||= read_cache(show_cache_file))
+        $shows[show] = $tvdb.search(show).first
+        cache show_cache_file, $shows[show]
+      else
+        $log.debug "Cache hit for show '#{show}'" if $debug
+      end
+      series_id = $shows[show]["seriesid"]
+      series_cache_file = "#{show}/series_#{season}/series.marshal"
+      unless ($series[series_id] ||= read_cache(series_cache_file))
+        $series[series_id] = $tvdb.get_series_by_id(series_id)
+        cache series_cache_file, $series[series_id]
+      else
+        $log.debug "Cache hit for show '#{show}', season '#{season}'" if $debug
+      end
+      episode_cache_file = "#{show}/series_#{season}/episode_#{episode}.marshal"
+      unless ($episodes["#{show}-#{season}-#{episode}"] ||= read_cache(episode_cache_file))
+        if ep = $series[series_id].get_episode(season.to_i, episode.to_i)
+          $episodes["#{show}-#{season}-#{episode}"] = ep
+          cache episode_cache_file, ep
+        else
+          return false
+        end
+      else
+        $log.debug "Cache hit for show '#{show}', season '#{season}', episode '#{episode}'" if $debug
+      end
+      @title = $episodes["#{show}-#{season}-#{episode}"].name
+    rescue Interrupt => e
+      raise
+    rescue Exception => e
+      return false
     end
-    series_id = $shows[show]["seriesid"]
-    series_cache_file = "#{show}/series_#{season}/series.marshal"
-    unless ($series[series_id] ||= read_cache(series_cache_file))
-      $series[series_id] = $tvdb.get_series_by_id(series_id)
-      cache series_cache_file, $series[series_id]
-    else
-      $log.debug "Cache hit for show '#{show}', season '#{season}'" if $debug
-    end
-    episode_cache_file = "#{show}/series_#{season}/episode_#{episode}.marshal"
-    unless ($episodes["#{show}-#{season}-#{episode}"] ||= read_cache(episode_cache_file))
-      ep = $series[series_id].get_episode(season.to_i, episode.to_i)
-      $episodes["#{show}-#{season}-#{episode}"] = ep
-      cache episode_cache_file, ep
-    else
-      $log.debug "Cache hit for show '#{show}', season '#{season}', episode '#{episode}'" if $debug
-    end
-    @title = $episodes["#{show}-#{season}-#{episode}"].name
+    true
   end
   
   def read_cache file
@@ -73,6 +92,6 @@ class Episode
   end
   
   def dot str
-    str.chomp(' ').gsub(/&/, 'and').gsub(/(\?|:|-|_)/, '').gsub(/\w+/) { |s| s.capitalize }.gsub(/\s+/, '.')
+    str.chomp(' ').gsub(/&/, 'and').gsub(/(\?|:|-|_|!|,|\)|\()/, '').gsub(/\w+/) { |s| s.capitalize }.gsub(/\s+/, '.')
   end
 end
