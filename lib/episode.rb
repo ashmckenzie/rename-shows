@@ -1,3 +1,6 @@
+class WarningException < Exception
+end
+
 class Episode
   attr_reader :show, :season, :episode, :title
   
@@ -6,16 +9,26 @@ class Episode
   end
     
   def rename!
-    if lookup
-      if @file != suggested_file
-        $log.info "Renaming '#{@file.basename} to '#{suggested_file.basename}" if $verbose
-        FileUtils.mv @file, suggested_file if $forreal
-      else
-        $log.info "Has correct filename '#{@file}'" if $verbose
-      end
-    else
-      $log.error "Something weird with '#{@file}'"
+    begin
+      lookup
+    rescue Interrupt
+      raise
+    rescue WarningException => e
+      $log.warn e.message
+      return false
+    rescue Exception => e
+      $log.error "#{e.message}, #{e.backtrace.last}"
+      return false
     end
+
+    if @file != suggested_file
+      $log.info "Renaming '#{@file.basename} to '#{suggested_file.basename}" if $verbose
+      FileUtils.mv @file, suggested_file if $forreal
+    else
+      $log.info "Has correct filename '#{@file}'" if $verbose
+    end
+
+    true
   end
   
   private
@@ -23,47 +36,47 @@ class Episode
   def lookup
     $log.debug "Looking up '#{@file}'" if $debug
 
-    return false unless (match = @file.basename.to_s.match(/s(\d\d)e(\d\d)\.?.*\.(\w+)$/i))
-
-    begin
-
-      @show = @file.dirname.to_s.split('/')[-2]
-      @season = match[1]
-      @episode = match[2]
-      @extension = match[3].downcase
-
-      show_cache_file = "#{show}/show.marshal"
-      unless ($shows[show] ||= read_cache(show_cache_file))
-        $shows[show] = $tvdb.search(show).first
-        cache show_cache_file, $shows[show]
-      else
-        $log.debug "Cache hit for show '#{show}'" if $debug
-      end
-      series_id = $shows[show]["seriesid"]
-      series_cache_file = "#{show}/series_#{season}/series.marshal"
-      unless ($series[series_id] ||= read_cache(series_cache_file))
-        $series[series_id] = $tvdb.get_series_by_id(series_id)
-        cache series_cache_file, $series[series_id]
-      else
-        $log.debug "Cache hit for show '#{show}', season '#{season}'" if $debug
-      end
-      episode_cache_file = "#{show}/series_#{season}/episode_#{episode}.marshal"
-      unless ($episodes["#{show}-#{season}-#{episode}"] ||= read_cache(episode_cache_file))
-        if ep = $series[series_id].get_episode(season.to_i, episode.to_i)
-          $episodes["#{show}-#{season}-#{episode}"] = ep
-          cache episode_cache_file, ep
-        else
-          return false
-        end
-      else
-        $log.debug "Cache hit for show '#{show}', season '#{season}', episode '#{episode}'" if $debug
-      end
-      @title = $episodes["#{show}-#{season}-#{episode}"].name
-    rescue Interrupt => e
-      raise
-    rescue Exception => e
+    unless (match = @file.basename.to_s.match(/s(\d+)e(\d+)\.?.*\.(\w+)$/i))
+      $log.error "Did not match regex '#{@file}'"
       return false
     end
+
+    @show = @file.dirname.to_s.split('/')[-2]
+    @season = match[1]
+    @episode = match[2]
+    @extension = match[3].downcase
+
+    show_cache_file = "#{show}/show.marshal"
+    unless ($shows[show] ||= read_cache(show_cache_file))
+      $shows[show] = $tvdb.search(show).first
+      cache show_cache_file, $shows[show]
+    else
+      $log.debug "Cache hit for show '#{show}'" if $debug
+    end
+
+    series_id = $shows[show]["seriesid"]
+    series_cache_file = "#{show}/series_#{season}/series.marshal"
+    unless ($series[series_id] ||= read_cache(series_cache_file))
+      $series[series_id] = $tvdb.get_series_by_id(series_id)
+      cache series_cache_file, $series[series_id]
+    else
+      $log.debug "Cache hit for show '#{show}', season '#{season}'" if $debug
+    end
+
+    episode_cache_file = "#{show}/series_#{season}/episode_#{episode}.marshal"
+    unless ($episodes["#{show}-#{season}-#{episode}"] ||= read_cache(episode_cache_file))
+      if ep = $series[series_id].get_episode(season.to_i, episode.to_i)
+        $episodes["#{show}-#{season}-#{episode}"] = ep
+        cache episode_cache_file, ep
+      else
+        raise WarningException, "Cannot find episode information for '#{@file}'"
+      end
+    else
+      $log.debug "Cache hit for show '#{show}', season '#{season}', episode '#{episode}'" if $debug
+    end
+
+    @title = $episodes["#{show}-#{season}-#{episode}"].name
+
     true
   end
   

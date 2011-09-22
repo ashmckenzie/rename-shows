@@ -45,7 +45,7 @@ unless ARGV[0] && File.directory?(ARGV[0])
   exit
 end
 
-Dir["#{ARGV[0]}/**/*"].each do |entry|
+Dir["#{ARGV[0].chomp('/')}/**/*"].each do |entry|
   next if File.directory? entry
   e = Episode.new entry
   e.rename!
