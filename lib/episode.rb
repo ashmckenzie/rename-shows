@@ -37,8 +37,7 @@ class Episode
     $log.debug "Looking up '#{@file}'" if $debug
 
     unless (match = @file.basename.to_s.match(/s(\d+)e(\d+)\.?.*\.(\w+)$/i))
-      $log.error "Did not match regex '#{@file}'"
-      return false
+      raise Exception, "Did not match regex '#{@file}'"
     end
 
     @show = @file.dirname.to_s.split('/')[-2]
