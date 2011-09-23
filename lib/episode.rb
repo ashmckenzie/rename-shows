@@ -18,6 +18,7 @@ class Episode
       return false
     rescue Exception => e
       $log.error "#{e.message}, #{e.backtrace.last}"
+      raise if $debug
       return false
     end
 
@@ -36,14 +37,15 @@ class Episode
   def lookup
     $log.debug "Looking up '#{@file}'" if $debug
 
-    unless (match = @file.basename.to_s.match(/s(\d+)e(\d+)\.?.*\.(\w+)$/i))
+    unless (match = @file.basename.to_s.match(/(.+)\.s(\d+)e(\d+)\.?.*\.(\w+)$/i))
       raise Exception, "Did not match regex '#{@file}'"
     end
 
-    @show = @file.dirname.to_s.split('/')[-2]
-    @season = match[1]
-    @episode = match[2]
-    @extension = match[3].downcase
+    #@show = @file.dirname.to_s.split('/')[-2]
+    @show = match[1].downcase.gsub(/\./, ' ')
+    @season = match[2]
+    @episode = match[3]
+    @extension = match[4].downcase
 
     show_cache_file = "#{show}/show.marshal"
     unless ($shows[show] ||= read_cache(show_cache_file))

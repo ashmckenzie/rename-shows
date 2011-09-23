@@ -40,13 +40,22 @@ $verbose = opts[:verbose]
 $debug = opts[:debug]
 $forreal = opts[:forreal]
 
-unless ARGV[0] && File.directory?(ARGV[0])
-  $log.error 'Please specify a directory'
+unless ARGV[0]
+  $log.error 'Please specify a directory or files to process.'
   exit
-end
+else
+  if File.directory?(ARGV[0])
+    entries = Dir["#{ARGV[0].chomp('/')}/**/*"]
+  elsif ARGV.is_a?(Array)
+    entries = ARGV
+  else
+    $log.error 'Some error occurred.'
+    exit
+  end
+end  
 
-Dir["#{ARGV[0].chomp('/')}/**/*"].each do |entry|
-  next if File.directory? entry
-  e = Episode.new entry
+entries.each do |entry|
+  next if(File.directory?(entry) || !File.exist?(entry))
+  e = Episode.new(entry)
   e.rename!
 end
