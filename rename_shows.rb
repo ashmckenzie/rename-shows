@@ -48,7 +48,11 @@ else
   entries = []
   $log.info 'Looking for entries..'
   ARGV.each do |arg|
-    entries += Dir["#{arg.chomp('/')}/**/*"].reject { |x| File.directory?(x) || !File.exist?(x) }
+    if File.directory? arg
+      entries += Dir["#{arg.chomp('/')}/**/*"].reject { |x| File.directory?(x) || !File.exist?(x) }
+    elsif File.file? arg
+      entries << arg
+    end
   end
   $log.info "#{entries.count} entries found."
 end
