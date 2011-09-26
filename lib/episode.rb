@@ -14,7 +14,7 @@ class Episode
     rescue Interrupt
       raise
     rescue WarningException => e
-      $log.warn e.message
+      $log.warn e.message if $debug
       return false
     rescue Exception => e
       $log.error "#{e.message}, #{e.backtrace.last}"
@@ -22,7 +22,11 @@ class Episode
       return false
     end
 
-    if @file != suggested_file
+    $log.debug "@file         =[#{@file}]" if $debug
+    $log.debug "suggested_file=[#{suggested_file}]" if $debug
+    $log.debug "#{@file.to_s != suggested_file.to_s}" if $debug
+
+    if same_file?(@file, suggested_file)
       $log.info "Renaming '#{@file.basename} to '#{suggested_file.basename}" if $verbose
       FileUtils.mv @file, suggested_file if $forreal
     else
@@ -38,14 +42,16 @@ class Episode
     $log.debug "Looking up '#{@file}'" if $debug
 
     unless (match = @file.basename.to_s.match(/(.+)\.s(\d+)e(\d+)\.?.*\.(\w+)$/i))
-      raise Exception, "Did not match regex '#{@file}'"
+      raise WarningException, "Did not match regex '#{@file}'"
     end
 
     #@show = @file.dirname.to_s.split('/')[-2]
-    @show = match[1].downcase.gsub(/\./, ' ')
+    @show = match[1].gsub(/\./, ' ')
     @season = match[2]
     @episode = match[3]
     @extension = match[4].downcase
+
+    $log.debug "Looking for show '#{show}'" if $debug
 
     show_cache_file = "#{show}/show.marshal"
     unless ($shows[show] ||= read_cache(show_cache_file))
@@ -97,6 +103,10 @@ class Episode
     f.close
   end
 
+  def same_file? file1, file2
+    @file.to_s.downcase != suggested_file.to_s.downcase
+  end
+
   def suggested_file
     @suggested_file ||= Pathname.new "#{@file.dirname}/#{dot(show)}.S#{pad(season)}E#{pad(episode)}.#{dot(title)}.#{@extension}"
   end
@@ -106,6 +116,6 @@ class Episode
   end
   
   def dot str
-    str.chomp(' ').gsub(/&/, 'and').gsub(/(\?|:|-|_|!|,|\)|\()/, '').gsub(/\w+/) { |s| s.capitalize }.gsub(/\s+/, '.')
+    str.chomp(' ').gsub(/&/, 'and').gsub(/(\?|:|-|_|!|,|\)|\()/, '').gsub(/\s+/, '.').split('.').each { |s| s.capitalize! }.join('.')
   end
 end
