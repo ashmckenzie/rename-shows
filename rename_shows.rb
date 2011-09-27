@@ -38,18 +38,6 @@ unless ARGV[0]
   $log.error 'Please specify a directory or files to process.'
   exit
 else
-  entries = []
-  ARGV.each do |arg|
-    if File.directory? arg
-      entries += Dir["#{arg.chomp('/')}/**/*"].reject { |x| File.directory?(x) || !File.exist?(x) }
-    elsif File.file? arg
-      entries << arg
-    end
-  end
-  $log.info "#{entries.count} entries found."
-end
-
-entries.each do |entry|
-  e = Episode.new(entry)
-  e.rename! $opts[:forreal]
+  $log.info "** DRY RUN MODE" unless $opts[:forreal]  
+  Episode.process ARGV
 end

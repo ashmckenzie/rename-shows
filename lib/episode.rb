@@ -9,6 +9,25 @@ class Episode
     @tv_db = @rename.tv_db
     @file = Pathname.new(path)
   end
+  
+  def self.process args
+    entries = []
+    
+    args.each do |arg|
+      if File.directory? arg
+        entries += Dir["#{arg.chomp('/')}/**/*"].reject { |x| File.directory?(x) || !File.exist?(x) }
+      elsif File.file? arg
+        entries << arg
+      end
+    end
+    
+    $log.info "#{entries.count} entries found."
+    
+    entries.each do |entry|
+      e = self.new(entry)
+      e.rename! $opts[:forreal]
+    end
+  end
     
   def rename! forreal=false
     begin
