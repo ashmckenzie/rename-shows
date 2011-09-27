@@ -46,7 +46,6 @@ unless ARGV[0]
   exit
 else
   entries = []
-  $log.info 'Looking for entries..'
   ARGV.each do |arg|
     if File.directory? arg
       entries += Dir["#{arg.chomp('/')}/**/*"].reject { |x| File.directory?(x) || !File.exist?(x) }

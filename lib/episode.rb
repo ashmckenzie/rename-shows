@@ -116,6 +116,6 @@ class Episode
   end
   
   def dot str
-    str.chomp(' ').gsub(/&/, 'and').gsub(/(\?|:|-|_|!|,|\)|\()/, '').gsub(/\s+/, '.').split('.').each { |s| s.capitalize! }.join('.')
+    str.chomp(' ').gsub(/&/, 'and').gsub(/\//, ' ').gsub(/(\?|:|-|_|!|,|\)|\()/, '').gsub(/\s+/, '.').split('.').each { |s| s.capitalize! }.join('.')
   end
 end
