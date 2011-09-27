@@ -15,7 +15,7 @@ becomes
 Usage
 -----
 
-`./rename_shows.rb [options] <directory>`
+`./@rename.rb [options] <directory>`
   
 Help
 ----
@@ -23,5 +23,6 @@ Help
     Options:
       --verbose, -v:   Verbose mode (default: true)
         --debug, -d:   Debug mode
+      --logging, -l:   Enable logging
       --forreal, -f:   Really rename files
          --help, -h:   Show this message
