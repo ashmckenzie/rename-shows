@@ -43,7 +43,7 @@ class Episode
       $log.warn e.message
       return false
     rescue Exception => e
-      $log.error "#{e.message}, #{e.backtrace.last}"
+      $log.error "#{e.message} - Run with --debug for more detail"
       if $opts[:debug]
         puts e.backtrace
         binding.pry
@@ -74,7 +74,7 @@ class Episode
   def lookup
     $log.debug "Looking up '#{@file}'"
 
-    unless (match = @file.basename.to_s.match(/(.+)(?:\.|_|-)s(\d+)e(\d+)(?:\.|_|-)?.*\.(\w+)$/i))
+    unless (match = @file.basename.to_s.match(/(.+)(?:\.|_|-| )?s(\d+)e(\d+)(?:\.|_|-| )?.*\.(\w+)$/i))
       raise WarningException, "Did not match regex '#{@file}'"
     end
 
@@ -94,8 +94,11 @@ class Episode
     show_cache_file = "#{show}/show.marshal"
     unless (@rename.shows[show] ||= read_cache(show_cache_file))
       $log.debug "No cache for show '#{show}'"
-      @rename.shows[show] = @tv_db.search(show).first
-      cache show_cache_file, @rename.shows[show]
+      if (@rename.shows[show] = @tv_db.search(show).first)
+        cache show_cache_file, @rename.shows[show]
+      else
+        raise WarningException, "Could not find a match for '#{@file}'"
+      end
     else
       $log.debug "Cache hit for show '#{show}'"
     end
@@ -148,7 +151,7 @@ class Episode
   end
 
   def suggested_file
-    @suggested_file ||= Pathname.new "#{@file.dirname}/#{normalise(show)}.S#{pad(season)}E#{pad(episode)}.#{normalise(title)}.#{@extension}"
+    @suggested_file ||= Pathname.new("#{@file.dirname}/#{normalise(show)}.S#{pad(season)}E#{pad(episode)}.#{normalise(title.remove_non_ascii)}.#{@extension}")
   end
   
   def pad str

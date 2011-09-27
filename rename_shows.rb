@@ -12,6 +12,7 @@ require 'pry'
 require 'awesome_print'
 require 'log4r/outputter/datefileoutputter'
 
+require_relative 'lib/string'
 require_relative 'lib/exceptions/warning_exception'
 require_relative 'lib/rename'
 require_relative 'lib/episode'
