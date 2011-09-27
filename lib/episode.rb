@@ -1,6 +1,3 @@
-class WarningException < Exception
-end
-
 class Episode
   attr_reader :show, :season, :series_id, :episode, :title
   
@@ -15,8 +12,12 @@ class Episode
     
     args.each do |arg|
       if File.directory? arg
-        entries += Dir["#{arg.chomp('/')}/**/*"].reject { |x| File.directory?(x) || !File.exist?(x) }
-      elsif File.file? arg
+        entries += Dir["#{arg.chomp('/')}/**/*"].reject do |x| 
+          File.directory?(x) || 
+          !File.exist?(x) ||
+          !self.is_video?(File.basename(x))
+        end
+      elsif File.file?(arg) && self.is_video?(arg)
         entries << arg
       end
     end
@@ -27,6 +28,10 @@ class Episode
       e = self.new(entry)
       e.rename! $opts[:forreal]
     end
+  end
+  
+  def self.is_video? file
+    file.downcase.match(/\.(mp4|m4v|mov|divx|xvid|avi)$/)
   end
     
   def rename! forreal=false
@@ -49,7 +54,7 @@ class Episode
     $log.debug "@file.to_s == suggested_file.to_s = #{@file.to_s == suggested_file.to_s}"
 
     unless same_file?(@file, suggested_file)
-      $log.info "Renaming '#{@file.basename} to '#{suggested_file.basename}"
+      $log.info "Renaming '#{@file.basename}' to '#{suggested_file.basename}"
       rename @file, suggested_file if forreal
     else
       $log.info "Has correct filename '#{@file}'"
