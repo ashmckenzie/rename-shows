@@ -73,12 +73,22 @@ class Episode
 
   def lookup
     $log.debug "Looking up '#{@file}'"
+    
+    match = nil
+    regexs = [
+      /(.+)(?:\.|_|-| )?s(\d+)e(\d+)(?:\.|_|-| )?.*\.(\w+)$/i,
+      /(.+) (\d+)x(\d+)(?:\.|_|-| )?.*\.(\w+)$/i
+    ]
 
-    unless (match = @file.basename.to_s.match(/(.+)(?:\.|_|-| )?s(\d+)e(\d+)(?:\.|_|-| )?.*\.(\w+)$/i))
-      raise WarningException, "Did not match regex '#{@file}'"
+    regexs.each do |regex|
+      if (match = @file.basename.to_s.match(regex))
+        break
+      end
     end
+    
+    raise WarningException, "Did not match regex '#{@file}'" unless match
 
-    @show = match[1].gsub(/\./, ' ')
+    @show = match[1].gsub(/\./, ' ').gsub(/-$/, '').chomp
     @season = match[2]
     @episode = match[3]
     @extension = match[4].downcase
