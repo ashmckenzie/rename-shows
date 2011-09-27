@@ -74,7 +74,7 @@ class Episode
   def lookup
     $log.debug "Looking up '#{@file}'"
 
-    unless (match = @file.basename.to_s.match(/(.+)\.s(\d+)e(\d+)\.?.*\.(\w+)$/i))
+    unless (match = @file.basename.to_s.match(/(.+)(?:\.|_|-)s(\d+)e(\d+)(?:\.|_|-)?.*\.(\w+)$/i))
       raise WarningException, "Did not match regex '#{@file}'"
     end
 
