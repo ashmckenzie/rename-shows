@@ -155,7 +155,7 @@ class Episode
   end
   
   def pad str
-    sprintf('%02d', str.to_s)
+    sprintf('%02d', str.to_i.to_s)
   end
 
   def normalise str
