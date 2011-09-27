@@ -7,12 +7,19 @@ class Rename
   attr_accessor :shows, :series, :episodes
   
   def initalize
-    @config ||= YAML.load_file('config.yaml')
-    @tv_db ||= TvdbParty::Search.new($config['api_key'])
-    
+    @config = nil
+    @tv_db = nil
     @shows = nil
     @series = nil
     @episodes = nil
+  end
+  
+  def config
+    @config ||= YAML.load_file('config.yaml')
+  end
+
+  def tv_db
+    @tv_db ||= TvdbParty::Search.new(self.config['api_key'])
   end
   
   def shows

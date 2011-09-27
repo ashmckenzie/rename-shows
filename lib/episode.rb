@@ -24,7 +24,7 @@ class Episode
     
     $log.info "#{entries.count} entries found."
     
-    entries.each do |entry|
+    entries.sort.each do |entry|
       e = self.new(entry)
       e.rename! $opts[:forreal]
     end
@@ -44,8 +44,10 @@ class Episode
       return false
     rescue Exception => e
       $log.error "#{e.message}, #{e.backtrace.last}"
-      puts e.backtrace
-      binding.pry if $opts[:debug]
+      if $opts[:debug]
+        puts e.backtrace
+        binding.pry
+      end
       return false
     end
 
