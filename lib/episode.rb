@@ -31,7 +31,7 @@ class Episode
   end
   
   def self.is_video? file
-    file.downcase.match(/\.(mp4|m4v|mov|divx|xvid|avi)$/)
+    file.downcase.match(/\.(mp4|m4v|mov|mkv|divx|xvid|avi)$/)
   end
     
   def rename! forreal=false
@@ -155,7 +155,7 @@ class Episode
   end
   
   def pad str
-    sprintf('%02s', str.to_s)
+    sprintf('%02d', str.to_s)
   end
 
   def normalise str
