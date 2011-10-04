@@ -9,13 +9,19 @@ class Episode
   
   def self.process args
     entries = []
-    
+
     args.each do |arg|
       if File.directory? arg
         entries += Dir["#{arg.chomp('/')}/**/*"].reject do |x| 
           File.directory?(x) || 
           !File.exist?(x) ||
-          !self.is_video?(File.basename(x))
+          !self.is_video?(File.basename(x)) ||
+          !Rename.instance.config['ignore'].each do |y|
+            if x.match(Regexp.new(y))
+              $log.debug "Ignoring '#{x}' as matched '#{y}'"
+              break
+            end
+          end
         end
       elsif File.file?(arg) && self.is_video?(arg)
         entries << arg
@@ -59,7 +65,7 @@ class Episode
       $log.info "Renaming '#{@file.basename}' to '#{suggested_file.basename}"
       rename @file, suggested_file if forreal
     else
-      $log.info "Has correct filename '#{@file}'"
+      $log.debug "Has correct filename '#{@file}'"
     end
     
     $log.debug ''
