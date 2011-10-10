@@ -20,14 +20,17 @@ require_relative 'lib/episode'
 include Log4r
 
 $opts = Trollop::options do
-  opt :verbose, "Verbose mode", :default => true
+  opt :noverbose, "No Verbose mode", :default => false
   opt :debug, "Debug mode", :default => false
   opt :logging, "Enable logging", :default => false
   opt :forreal, "Really rename files", :default => false
 end
 
 $log = Log4r::Logger.new ''
-$log.level = INFO if $opts[:verbose]
+
+$log.level = INFO
+
+$log.level = ERROR if $opts[:noverbose]
 $log.level = DEBUG if $opts[:debug]
 
 $log.outputters = [
