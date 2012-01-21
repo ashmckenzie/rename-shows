@@ -167,7 +167,8 @@ class Episode
   end
 
   def suggested_file
-    @suggested_file ||= Pathname.new("#{@file.dirname}/#{normalise(show)}.S#{pad(season)}E#{pad(episode)}.#{normalise(title.remove_non_ascii)}.#{@extension}")
+    #@suggested_file ||= Pathname.new("#{@file.dirname}/#{normalise(show)}.S#{pad(season)}E#{pad(episode)}.#{normalise(title.remove_non_ascii)}.#{@extension}")
+    @suggested_file ||= Pathname.new("#{@file.dirname}/#{normalise(show)}.S#{pad(season)}E#{pad(episode)}.#{normalise(title.encode('ASCII', { :replace => '' }))}.#{@extension}")
   end
   
   def pad str

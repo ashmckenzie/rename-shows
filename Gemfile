@@ -2,7 +2,7 @@ source :rubygems
 
 gem 'tvdb_party'
 gem 'trollop'
-gem 'log4r'
+gem 'logging'
 
 group :development do
   gem 'awesome_print'

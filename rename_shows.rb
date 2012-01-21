@@ -10,14 +10,10 @@ require 'trollop'
 require 'yaml'
 require 'pry'
 require 'awesome_print'
-require 'log4r/outputter/datefileoutputter'
 
-require_relative 'lib/string'
 require_relative 'lib/exceptions/warning_exception'
 require_relative 'lib/rename'
 require_relative 'lib/episode'
-
-include Log4r
 
 $opts = Trollop::options do
   opt :noverbose, "No Verbose mode", :default => false
@@ -26,18 +22,12 @@ $opts = Trollop::options do
   opt :forreal, "Really rename files", :default => false
 end
 
-$log = Log4r::Logger.new ''
+$log = Logging.logger(STDOUT)
 
-$log.level = INFO
+$log.level = :info
 
-$log.level = ERROR if $opts[:noverbose]
-$log.level = DEBUG if $opts[:debug]
-
-$log.outputters = [
-  Log4r::StdoutOutputter.new('', :formatter => Log4r::PatternFormatter.new(:pattern => "%d %5l: %m")),
-]
-
-$log.outputters << Log4r::FileOutputter.new('', :filename => "log/#{Time.now.strftime('%Y%m%d%H%M%S')}.log") if $opts[:logging]
+$log.level = 'off' if $opts[:noverbose]
+$log.level = :debug if $opts[:debug]
 
 unless ARGV[0]
   $log.error 'Please specify a directory or files to process.'
